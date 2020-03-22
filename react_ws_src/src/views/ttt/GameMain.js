@@ -25,13 +25,17 @@ export default class SetName extends Component {
 			['c3', 'c5', 'c7']
 		]
 
+		this.getTargetToPissOffUser = this.getTargetToPissOffUser.bind(this);
+
 
 		if (this.props.game_type != 'live')
 			this.state = {
 				cell_vals: {},
 				next_turn_ply: true,
 				game_play: true,
-				game_stat: 'Start game'
+				game_stat: 'Start game',
+				user_chosen_cells: [],
+				user_turn_count: 0
 			}
 		else {
 			this.sock_start()
@@ -159,6 +163,16 @@ export default class SetName extends Component {
 		const cell_id = e.currentTarget.id.substr(11)
 		if (this.state.cell_vals[cell_id]) return
 
+		//push 'user chosen cell' in state array and update turn count
+		this.setState((prevState) => {
+			let usrChosenCells = [...prevState.user_chosen_cells, cell_id];
+			let turnCount = prevState.user_turn_count + 1;
+			return {
+				user_chosen_cells: usrChosenCells,
+				user_turn_count: turnCount
+			};
+		});
+
 		if (this.props.game_type != 'live')
 			this.turn_ply_comp(cell_id)
 		else
@@ -195,17 +209,26 @@ export default class SetName extends Component {
 
 		let { cell_vals } = this.state
 		let empty_cells_arr = []
+		let target = null;
 
 
 		for (let i=1; i<=9; i++) 
 			!cell_vals['c'+i] && empty_cells_arr.push('c'+i)
 		// console.log(cell_vals, empty_cells_arr, rand_arr_elem(empty_cells_arr))
 
-		const c = rand_arr_elem(empty_cells_arr)
-		cell_vals[c] = 'o'
+		//execute the SMART logic function when user turn count is between 2 and 4
+		if (this.state.user_turn_count >= 2 && this.state.user_turn_count <= 4) {
+			target = this.getTargetToPissOffUser(empty_cells_arr);
+		}
 
-		TweenMax.from(this.refs[c], 0.7, {opacity: 0, scaleX:0, scaleY:0, ease: Power4.easeOut})
-
+		if (target !== null) {
+			cell_vals[target] = 'o';
+			TweenMax.from(this.refs[target], 0.7, {opacity: 0, scaleX:0, scaleY:0, ease: Power4.easeOut})
+		} else {
+			const c = rand_arr_elem(empty_cells_arr);
+			cell_vals[c] = 'o';
+			TweenMax.from(this.refs[c], 0.7, {opacity: 0, scaleX:0, scaleY:0, ease: Power4.easeOut})
+		}
 
 		// this.setState({
 		// 	cell_vals: cell_vals,
@@ -215,6 +238,53 @@ export default class SetName extends Component {
 		this.state.cell_vals = cell_vals
 
 		this.check_turn()
+	}
+
+	getTargetToPissOffUser(emtCellArr) {
+		//function to find target cell to put 'o' and piss off user/stop from winning....lol
+		let user_match_cells = [];
+		let target_cell = null;
+		
+		//Loop thru the array and check if both the user selected cells are present in winning set.
+		//If yes, get the remaining item in winning set to place 'x' on it to avoid the user from winning. 
+		for (let s of this.win_sets) {
+			//check the user turn count and filter array accordingly
+			switch (this.state.user_turn_count) {
+				case 2:
+					user_match_cells = s.filter((id) => id === this.state.user_chosen_cells[0] || id === this.state.user_chosen_cells[1]);
+					break;
+				case 3:
+					user_match_cells = s.filter((id) => id === this.state.user_chosen_cells[1] || id === this.state.user_chosen_cells[2]);
+					break;
+				case 4:
+					user_match_cells = s.filter((id) => id === this.state.user_chosen_cells[0] || id === this.state.user_chosen_cells[3]);
+					break;
+			}
+			
+			console.log('user match array: ' + user_match_cells);
+	
+			if (user_match_cells.length === 2) {
+				console.log('i am the one');
+	
+				target_cell = s.filter((id) => id !== user_match_cells[0] && id !== user_match_cells[1]);
+				
+				break;
+			}
+		}
+	
+		if (target_cell !== null) {
+			console.log('Target Found: ' + target_cell[0]);
+			if (emtCellArr.includes(target_cell[0])) {
+				return target_cell[0];
+			} else {
+				console.log('Target is not empty!...returning null');
+				return null;
+			}
+		} else {
+			console.log('No target found!');
+		}
+	
+		return target_cell;
 	}
 
 
