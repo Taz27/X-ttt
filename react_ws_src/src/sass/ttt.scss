@@ -142,13 +142,16 @@ section#TTT_game{
 
 			vertical-align: middle;
 			text-align: center;
+			background: #add9e6;
 
 			&:hover{
-				background: #ff0;
+				// background: #ff0;
+				background: #5677aa;
 			}
 
 			&.win {
-				background: #f00;
+				// background: #f00;
+				background: #fd2b36;
 			}
 		}
 
