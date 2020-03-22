@@ -184,10 +184,16 @@ export default class SetName extends Component {
 //	------------------------	------------------------	------------------------
 
 	turn_ply_comp (cell_id) {
+		//Rather than modifying state directly, create a new object and add 'cell_id' property on it
+		//then use this.setState method to update state
 
-		let { cell_vals } = this.state
+		//let { cell_vals } = this.state
+		let cell_vals_copy = Object.assign({}, this.state.cell_vals); //copy cell_vals state object using spread operator or Object.assign
 
-		cell_vals[cell_id] = 'x'
+		//add the 'cell_id' property on it
+		cell_vals_copy[cell_id] = 'x'
+		//let { cell_vals } = this.state
+		//cell_vals[cell_id] = 'x'
 
 		TweenMax.from(this.refs[cell_id], 0.7, {opacity: 0, scaleX:0, scaleY:0, ease: Power4.easeOut})
 
@@ -199,7 +205,11 @@ export default class SetName extends Component {
 
 		// setTimeout(this.turn_comp.bind(this), rand_to_fro(500, 1000));
 
-		this.state.cell_vals = cell_vals
+		//this.state.cell_vals = cell_vals
+		//update STATE using setState
+		this.setState({
+			cell_vals: cell_vals_copy
+		});
 
 		this.check_turn()
 	}
@@ -207,14 +217,20 @@ export default class SetName extends Component {
 //	------------------------	------------------------	------------------------
 
 	turn_comp () {
+		//Rather than modifying state directly, create a new object and add 'cell_id' property on it
+		//then use this.setState method to update state
+		//let { cell_vals } = this.state
 
-		let { cell_vals } = this.state
+		//copy cell_vals state object using spread operator or Object.assign
+		let cell_vals_copy = Object.assign({}, this.state.cell_vals); 
+
 		let empty_cells_arr = []
+		//set target to null as default. It will be returned by SMART logic method
 		let target = null;
 
 
 		for (let i=1; i<=9; i++) 
-			!cell_vals['c'+i] && empty_cells_arr.push('c'+i)
+			!cell_vals_copy['c'+i] && empty_cells_arr.push('c'+i)
 		// console.log(cell_vals, empty_cells_arr, rand_arr_elem(empty_cells_arr))
 
 		//only execute the SMART logic function when user turn count is between 2 and 4
@@ -223,20 +239,27 @@ export default class SetName extends Component {
 		}
 
 		if (target !== null) {
-			cell_vals[target] = 'o';
+			cell_vals_copy[target] = 'o';
 			TweenMax.from(this.refs[target], 0.7, {opacity: 0, scaleX:0, scaleY:0, ease: Power4.easeOut})
 		} else { //if target is null, use the random target cell selection function as fallback
 			const c = rand_arr_elem(empty_cells_arr);
-			cell_vals[c] = 'o';
-			TweenMax.from(this.refs[c], 0.7, {opacity: 0, scaleX:0, scaleY:0, ease: Power4.easeOut})
+			//console.log('c random cell: ' + c);
+			if (c) { //proceed only if c is defined. if empty_cells_arr is empty, rand_arr_elem returns undefined 
+				cell_vals_copy[c] = 'o';
+				TweenMax.from(this.refs[c], 0.7, {opacity: 0, scaleX:0, scaleY:0, ease: Power4.easeOut})
+			}
 		}
 
 		// this.setState({
 		// 	cell_vals: cell_vals,
 		// 	next_turn_ply: true
 		// })
-
-		this.state.cell_vals = cell_vals
+		//console.log(cell_vals_copy);
+		//this.state.cell_vals = cell_vals
+		//update STATE using setState
+		this.setState({
+			cell_vals: cell_vals_copy
+		});
 
 		this.check_turn()
 	}
@@ -276,7 +299,7 @@ export default class SetName extends Component {
 					console.log('Target Found! ' + target_cell[0]);
 					return target_cell[0];
 				} else {
-					console.log('Target is not empty!');
+					console.log('Target is not empty! ' + target_cell[0]);
 					target_cell = null; //make target null
 					if (loopRunCount < 8) { //continue loop if all the 8 win_sets are not checked
 						console.log('...continuing loop to check further winning sets.');
@@ -299,14 +322,18 @@ export default class SetName extends Component {
 //	------------------------	------------------------	------------------------
 
 	turn_ply_live (cell_id) {
+		//Rather than modifying state directly, create a new object and add 'cell_id' property on it
+		//then use this.setState method to update state
 
-		let { cell_vals } = this.state
+		//let { cell_vals } = this.state
+		let cell_vals_copy = Object.assign({}, this.state.cell_vals); //copy cell_vals state object using spread operator or Object.assign
 
-		cell_vals[cell_id] = 'x'
+		//add the 'cell_id' property on it
+		cell_vals_copy[cell_id] = 'x'
 
 		TweenMax.from(this.refs[cell_id], 0.7, {opacity: 0, scaleX:0, scaleY:0, ease: Power4.easeOut})
 
-		this.socket.emit('ply_turn', { cell_id: cell_id });
+		this.socket.emit('ply_turn', { cell_id });
 
 		// this.setState({
 		// 	cell_vals: cell_vals,
@@ -314,8 +341,12 @@ export default class SetName extends Component {
 		// })
 
 		// setTimeout(this.turn_comp.bind(this), rand_to_fro(500, 1000));
-
-		this.state.cell_vals = cell_vals
+		
+		//this.state.cell_vals = cell_vals
+		//update STATE using setState
+		this.setState({
+			cell_vals: cell_vals_copy
+		});
 
 		this.check_turn()
 	}
@@ -323,13 +354,18 @@ export default class SetName extends Component {
 //	------------------------	------------------------	------------------------
 
 	turn_opp_live (data) {
+		//Rather than modifying state directly, create a new object and add 'cell_id' property on it
+		//then use this.setState method to update state
 
-		let { cell_vals } = this.state
+		//let { cell_vals } = this.state
+		let cell_vals_copy = Object.assign({}, this.state.cell_vals); //copy cell_vals state object using spread operator or Object.assign
+
+		//let { cell_vals } = this.state
 		let empty_cells_arr = []
 
 
 		const c = data.cell_id
-		cell_vals[c] = 'o'
+		cell_vals_copy[c] = 'o'
 
 		TweenMax.from(this.refs[c], 0.7, {opacity: 0, scaleX:0, scaleY:0, ease: Power4.easeOut})
 
@@ -339,7 +375,11 @@ export default class SetName extends Component {
 		// 	next_turn_ply: true
 		// })
 
-		this.state.cell_vals = cell_vals
+		//this.state.cell_vals = cell_vals
+		//update STATE using setState
+		this.setState({
+			cell_vals: cell_vals_copy
+		});
 
 		this.check_turn()
 	}
