@@ -1,11 +1,14 @@
 import React, {Component} from 'react'
 
 export default class SetName extends Component {
-
+	//changed input to 'controlled component'
 	constructor (props) {
 		super(props)
 
-		this.state = {}
+		this.state = {
+			userName: ''
+		}
+		this.handleChange = this.handleChange.bind(this);
 	}
 
 //	------------------------	------------------------	------------------------
@@ -18,7 +21,7 @@ export default class SetName extends Component {
 
 				<div ref='nameHolder' className='input_holder left'>
 					<label>Name </label>
-					<input ref='name' type='text' className='input name' placeholder='Name' />
+					<input name='username' type='text' value={this.state.userName} className='input name' placeholder='Name' onChange={this.handleChange} />
 				</div>
 
 
@@ -28,6 +31,10 @@ export default class SetName extends Component {
 		)
 	}
 
+	handleChange(event) {
+		this.setState({userName: event.target.value});
+	  }
+
 //	------------------------	------------------------	------------------------
 
 	saveName (e) {
@@ -35,7 +42,7 @@ export default class SetName extends Component {
 		// const { onSetName } = this.props
 		// onSetName(name.value.trim())
 
-		this.props.onSetName(this.refs.name.value.trim())
+		this.props.onSetName(this.state.userName.trim())
 	}
 
 }
