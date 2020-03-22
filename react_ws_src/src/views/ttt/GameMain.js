@@ -25,7 +25,8 @@ export default class SetName extends Component {
 			['c3', 'c5', 'c7']
 		]
 
-		this.getTargetToPissOffUser = this.getTargetToPissOffUser.bind(this);
+		//bind useSmartLogic method to this class
+		this.useSmartLogic = this.useSmartLogic.bind(this);
 
 
 		if (this.props.game_type != 'live')
@@ -163,7 +164,7 @@ export default class SetName extends Component {
 		const cell_id = e.currentTarget.id.substr(11)
 		if (this.state.cell_vals[cell_id]) return
 
-		//push 'user chosen cell' in state array and update turn count
+		//update 'user chosen cells' and 'user turn count' state
 		this.setState((prevState) => {
 			let usrChosenCells = [...prevState.user_chosen_cells, cell_id];
 			let turnCount = prevState.user_turn_count + 1;
@@ -216,15 +217,15 @@ export default class SetName extends Component {
 			!cell_vals['c'+i] && empty_cells_arr.push('c'+i)
 		// console.log(cell_vals, empty_cells_arr, rand_arr_elem(empty_cells_arr))
 
-		//execute the SMART logic function when user turn count is between 2 and 4
+		//only execute the SMART logic function when user turn count is between 2 and 4
 		if (this.state.user_turn_count >= 2 && this.state.user_turn_count <= 4) {
-			target = this.getTargetToPissOffUser(empty_cells_arr);
+			target = this.useSmartLogic(empty_cells_arr);
 		}
 
 		if (target !== null) {
 			cell_vals[target] = 'o';
 			TweenMax.from(this.refs[target], 0.7, {opacity: 0, scaleX:0, scaleY:0, ease: Power4.easeOut})
-		} else {
+		} else { //if target is null, use the random target cell selection function as fallback
 			const c = rand_arr_elem(empty_cells_arr);
 			cell_vals[c] = 'o';
 			TweenMax.from(this.refs[c], 0.7, {opacity: 0, scaleX:0, scaleY:0, ease: Power4.easeOut})
@@ -240,50 +241,56 @@ export default class SetName extends Component {
 		this.check_turn()
 	}
 
-	getTargetToPissOffUser(emtCellArr) {
+	useSmartLogic(emtCellArr) {
 		//function to find target cell to put 'o' and piss off user/stop from winning....lol
 		let user_match_cells = [];
 		let target_cell = null;
+		//keep track of loop run count to make sure it continues if it finds a target cell 
+		//that is not empty and checks all the winning sets.
+		let loopRunCount = 0;
 		
 		//Loop thru the array and check if both the user selected cells are present in winning set.
-		//If yes, get the remaining item in winning set to place 'x' on it to avoid the user from winning. 
+		//If yes, get the remaining item in winning set to place 'o' on it to stop the user from winning. 
 		for (let s of this.win_sets) {
-			//check the user turn count and filter array accordingly
+			//check the user turn count and create a filtered matching cells array accordingly
 			switch (this.state.user_turn_count) {
 				case 2:
 					user_match_cells = s.filter((id) => id === this.state.user_chosen_cells[0] || id === this.state.user_chosen_cells[1]);
 					break;
 				case 3:
-					user_match_cells = s.filter((id) => id === this.state.user_chosen_cells[1] || id === this.state.user_chosen_cells[2]);
+					user_match_cells = s.filter((id) => id === this.state.user_chosen_cells[0] || id === this.state.user_chosen_cells[1] || id === this.state.user_chosen_cells[2]);
 					break;
 				case 4:
-					user_match_cells = s.filter((id) => id === this.state.user_chosen_cells[0] || id === this.state.user_chosen_cells[3]);
+					user_match_cells = s.filter((id) => id === this.state.user_chosen_cells[0] || id === this.state.user_chosen_cells[1] || id === this.state.user_chosen_cells[2] || id === this.state.user_chosen_cells[3]);
 					break;
 			}
-			
-			console.log('user match array: ' + user_match_cells);
+			loopRunCount++; //increment run count
+			//console.log('user matching cells array: ' + user_match_cells);
 	
 			if (user_match_cells.length === 2) {
-				console.log('i am the one');
-	
+				//if 2 user selected cells are found in a winning set, get the remaining cell as target
 				target_cell = s.filter((id) => id !== user_match_cells[0] && id !== user_match_cells[1]);
 				
-				break;
+				//check if target cell exists in empty cell array, if not check if loop has checked every winning set, if not continue loop
+				if (emtCellArr.includes(target_cell[0])) { 
+					console.log('Target Found! ' + target_cell[0]);
+					return target_cell[0];
+				} else {
+					console.log('Target is not empty!');
+					target_cell = null; //make target null
+					if (loopRunCount < 8) { //continue loop if all the 8 win_sets are not checked
+						console.log('...continuing loop to check further winning sets.');
+						continue;
+					}
+					
+				}
 			}
 		}
-	
-		if (target_cell !== null) {
-			console.log('Target Found: ' + target_cell[0]);
-			if (emtCellArr.includes(target_cell[0])) {
-				return target_cell[0];
-			} else {
-				console.log('Target is not empty!...returning null');
-				return null;
-			}
-		} else {
+		//if target cell is still null, log to console
+		if (target_cell === null) {
 			console.log('No target found!');
-		}
-	
+		} 
+		//return the target cell
 		return target_cell;
 	}
 
