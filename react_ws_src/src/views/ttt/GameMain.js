@@ -45,7 +45,9 @@ export default class SetName extends Component {
 				cell_vals: {},
 				next_turn_ply: true,
 				game_play: false,
-				game_stat: 'Connecting'
+				game_stat: 'Connecting',
+				user_chosen_cells: [],
+				user_turn_count: 0
 			}
 		}
 	}
